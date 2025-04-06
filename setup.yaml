@@ -15,6 +15,7 @@ spec:
       labels:
         app: mykube
     spec:
+      serviceAccountName: mykube-serviceaccount
       containers:
         - name: mykube
           image: rezacomplete/mykube:latest
@@ -101,4 +102,37 @@ spec:
                 name: mykube-service
                 port:
                   number: 80
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+  - apiGroups: [""] # "" indicates the core API group
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
+  name: mykube-serviceaccount
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: mykube-serviceaccount
+    namespace: default
+roleRef:
+  kind: Role
+  name: pod-reader
+---
+
 
